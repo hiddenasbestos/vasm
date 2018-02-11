@@ -122,6 +122,7 @@ struct section {
   uint32_t flags;
   uint32_t memattr;  /* type of memory, used by some object formats */
   taddr org;
+  uint64_t out_pos; /* output position (absolute), used to relocate sections into banks */
   taddr pc;
   uint32_t idx; /* usable by output module */
 };

@@ -360,12 +360,13 @@ static void assemble(void)
         p->content.db=db;
         p->type=DATA;
       }
-      else if(p->type==ROFFS){
+      else if(p->type==ROFFS)
+	  {
         sblock *sb;
         taddr space;
         if(eval_expr(p->content.roffs,&space,sec,sec->pc)){
-          space=sec->org+space-sec->pc;
-          if (space>=0){
+          if ((utaddr)space>=(utaddr)sec->pc){
+            space -= sec->pc;
             sb=new_sblock(number_expr(space),1,0);
             p->content.sb=sb;
             p->type=SPACE;
@@ -789,6 +790,8 @@ int main(int argc,char **argv)
       write_depends(stdout);
   }
   leave();
+  if(verbose)
+    putchar('\n');
   return 0; /* not reached */
 }
 
@@ -1020,6 +1023,7 @@ section *new_section(char *name,char *attr,int align)
   p->first=p->last=0;
   p->align=align;
   p->org=p->pc=0;
+  p->out_pos=0;
   p->flags=0;
   p->memattr=0;
   memset(p->pad,0,MAXPADBYTES);
@@ -1040,6 +1044,7 @@ section *new_org(taddr org)
   sprintf(buf,"seg%llx",ULLTADDR(org));
   sec = new_section(buf,"acrwx",1);
   sec->org = sec->pc = org;
+  sec->out_pos = ULLTADDR(org);
   sec->flags |= ABSOLUTE;  /* absolute destination address */
   return sec;
 }
@@ -1073,8 +1078,10 @@ void switch_offset_section(char *name,taddr offs)
   }
   sec = new_section(name,"u",1);
   sec->flags |= UNALLOCATED;
-  if (offs != -1)
+  if (offs != -1) {
     sec->org = sec->pc = offs;
+	sec->out_pos = ULLTADDR(offs);
+  }
   set_section(sec);
 }
 
@@ -1165,8 +1172,8 @@ void print_section(FILE *f,section *sec)
 {
   atom *p;
   taddr pc=sec->org;
-  fprintf(f,"section %s (attr=<%s> align=%llu):\n",
-          sec->name,sec->attr,ULLTADDR(sec->align));
+  fprintf(f,"section %s (attr=<%s> org=0x%llx pc=0x%llx output=0x%llx align=%llu):\n",
+          sec->name,sec->attr,ULLTADDR(sec->org),ULLTADDR(sec->pc),sec->out_pos,ULLTADDR(sec->align));
   for(p=sec->first;p;p=p->next){
     pc=pcalign(p,pc);
     fprintf(f,"%8llx: ",ULLTADDR(pc));

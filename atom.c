@@ -196,7 +196,7 @@ static size_t roffs_size(expr *offsexp,section *sec,taddr pc)
   taddr offs;
 
   eval_expr(offsexp,&offs,sec,pc);
-  offs = sec->org + offs - pc;
+  offs -= pc;
   return offs>0 ? offs : 0;
 }
 
@@ -314,7 +314,7 @@ void print_atom(FILE *f,atom *p)
       print_instruction(f,p->content.inst);
       break;
     case SPACE:
-      fprintf(f,"space(%lu,fill=",
+      fprintf(f,"space(0x%lx,fill=",
               (unsigned long)(p->content.sb->space*p->content.sb->size));
       for (i=0; i<p->content.sb->size; i++)
         fprintf(f,"%02x%c",(unsigned char)p->content.sb->fill[i],

@@ -209,6 +209,28 @@ static void handle_section(char *s)
   eol(s);
 }
 
+static void handle_output(char *s)
+{
+	expr* e;
+	e = parse_expr(&s);
+	uint64_t var;
+	if ( e->type == HUG ) {
+		var = huge_to_int( e->c.huge );
+	} else if ( e->type == NUM ){
+		var = ULLTADDR(e->c.val);
+	} else {
+      syntax_error(18);  /* syntax error */
+      return;
+	}
+	
+  if (current_section != NULL) {
+    current_section->out_pos = var;
+  } else {
+    set_section(new_org(var));
+  }
+  eol(s);
+}
+
 static void handle_org(char *s)
 {
   if (*s == current_pc_char) {    /*  "* = * + <expr>" reserves bytes */
@@ -221,9 +243,18 @@ static void handle_org(char *s)
       return;
     }
   }
-  else if (current_section != NULL) {
-    /* .org inside a section is treated as an offset */
-    add_atom(0,new_roffs_atom(parse_expr_tmplab(&s)));
+  else if (current_section != NULL)
+  {
+    if ( current_section->pc == 0 ) {
+      /* .org at the very start of a section, moves the section */
+      current_section->org = current_section->pc = parse_constexpr(&s);
+	  if ( current_section->out_pos == 0 ) {
+		  current_section->out_pos = ULLTADDR(current_section->org);
+	  }
+    } else {
+      /* .org inside a section is treated as an offset */
+      add_atom(0,new_roffs_atom(parse_expr_tmplab(&s)));
+    }
   }
   else
     set_section(new_org(parse_constexpr(&s)));
@@ -935,13 +966,16 @@ struct {
   void (*func)(char *);
 } directives[]={
   "org",handle_org,
+  "output",handle_output,
   "section",handle_section,
   "string",handle_string,
+  "db",handle_8bit,
   "byte",handle_8bit,
   "ascii",handle_8bit,
   "asciz",handle_string,
   "short",handle_16bit,
   "half",handle_16bit,
+  "dw",handle_16bit,
   "word",handle_16bit,
   "int",handle_32bit,
   "long",handle_32bit,

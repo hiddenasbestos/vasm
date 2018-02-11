@@ -20,6 +20,14 @@ selected with the @option{-Fbin} option.
         Writes a Commodore PRG header in front of the output file, which
         consists of two bytes in little-endian order, defining the load
         address of the program.
+    @item -rom
+        Only output read-only sections. Writable sections are discarded.
+    @item -map
+        Write a detailed map of the output file to the standard output.
+    @item -len=xxx
+        Ensure that the file output is at least xxx bytes long. Shorter
+        files are padded to this length with zero byte values. Longer files
+        are not affected.
 @end table
  
 @section General
