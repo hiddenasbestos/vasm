@@ -359,7 +359,10 @@ void print_atom(FILE *f,atom *p)
               p->content.nlist->name!=NULL ? p->content.nlist->name : "<NULL>",
               p->content.nlist->type,p->content.nlist->other,
               p->content.nlist->desc);
-      print_expr(f,p->content.nlist->value);
+      if (p->content.nlist->value != NULL)
+        print_expr(f,p->content.nlist->value);
+      else
+        fprintf(f,"NULL");
       break;
     default:
       ierror(0);
@@ -456,7 +459,7 @@ static atom *new_atom(int type,taddr align)
 
 atom *new_inst_atom(instruction *p)
 {
-  atom *new = new_atom(INSTRUCTION,INST_ALIGN);
+  atom *new = new_atom(INSTRUCTION,inst_alignment);
 
   new->content.inst = p;
   return new;

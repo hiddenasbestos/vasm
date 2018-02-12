@@ -1,10 +1,10 @@
 /* output_bin.c binary output driver for vasm */
-/* (c) in 2002-2009,2013,2015 by Volker Barthelmann and Frank Wille */
+/* (c) in 2002-2009,2013,2015,2017 by Volker Barthelmann and Frank Wille */
 
 #include "vasm.h"
 
 #ifdef OUTBIN
-static char *copyright="vasm binary output module 1.8 (c) 2002-2009,2013,2015 Volker Barthelmann";
+static char *copyright="vasm binary output module 1.8a (c) 2002-2009,2013,2015,2017 Volker Barthelmann";
 
 #define BINFMT_RAW      0
 #define BINFMT_CBMPRG   1   /* Commodore VIC-20/C-64 PRG format */
