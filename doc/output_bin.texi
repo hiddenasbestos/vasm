@@ -24,8 +24,8 @@ selected with the @option{-Fbin} option.
         Only output read-only sections. Writable sections are discarded.
     @item -map
         Write a detailed map of the output file to the standard output.
-    @item -len=xxx
-        Ensure that the file output is at least xxx bytes long. Shorter
+    @item -len=<n>
+        Ensure that the file output is at least <n> bytes long. Shorter
         files are padded to this length with zero byte values. Longer files
         are not affected.
 @end table
