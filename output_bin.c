@@ -197,11 +197,14 @@ static void write_output(FILE *f,section *sec,symbol *sym)
 
 			if ( s->out_pos != s->org )
 			{
-				if ( size == 1 ) {
-					printf("\t<-- local: %08llX",
+				if ( size == 1 )
+				{
+					printf("\t\t<-- local: %08llX",
 						ULLTADDR(s->org)
 					);
-				} else {
+				}
+				else
+				{
 					printf("\t<-- local: %08llX - %08llX",
 						ULLTADDR(s->org),ULLTADDR(s->org)+size-1
 					);
