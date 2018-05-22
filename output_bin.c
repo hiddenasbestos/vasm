@@ -14,19 +14,72 @@ static int g_rom_mode = 0;
 static int g_print_map = 0;
 static uint64_t g_length = 0;
 
-static int orgcmp( const void * _sec1,const void * _sec2 )
+static void debug_section_overlap( section* sec1, section* sec2 )
+{
+    utaddr size1;
+    utaddr size2;
+
+	size1 = (utaddr)(sec1->pc) - (utaddr)(sec1->org);
+	size2 = (utaddr)(sec2->pc) - (utaddr)(sec2->org);
+
+	printf( "\nerror: sections overlap:\n" );
+
+	printf( " %08llX - %08llX %16s (%llu)", sec1->out_pos,sec1->out_pos + size1-1,sec1->name,ULLTADDR(size1) );
+
+	if ( sec1->out_pos != sec1->org )
+	{
+		if ( size1 == 1 ) {
+			printf("\t<-- local: %08llX",
+				ULLTADDR(sec1->org)
+			);
+		} else {
+			printf("\t<-- local: %08llX - %08llX",
+				ULLTADDR(sec1->org),ULLTADDR(sec1->org)+size1-1
+			);
+		}
+	}
+
+	putchar('\n');
+
+	printf( " %08llX - %08llX %16s (%llu)", sec2->out_pos,sec2->out_pos + size2-1,sec2->name,ULLTADDR(size2) );
+
+	if ( sec2->out_pos != sec2->org )
+	{
+		if ( size2 == 1 ) {
+			printf("\t<-- local: %08llX",
+				ULLTADDR(sec2->org)
+			);
+		} else {
+			printf("\t<-- local: %08llX - %08llX",
+				ULLTADDR(sec2->org),ULLTADDR(sec2->org)+size2-1
+			);
+		}
+	}
+
+	putchar('\n');
+}
+
+static int out_pos_cmp( const void * _sec1,const void * _sec2 )
 {
 	section* sec1;
 	section* sec2;
-	
+
+    utaddr size1;
+    utaddr size2;
+
 	sec1 = (*(section **)_sec1);
 	sec2 = (*(section **)_sec2);
-	
-	if ( ( sec1->out_pos + sec1->org ) > ( sec2->out_pos + sec2->org ) )
+
+	size1 = (utaddr)(sec1->pc) - (utaddr)(sec1->org);
+	size2 = (utaddr)(sec2->pc) - (utaddr)(sec2->org);
+
+	if ( ( sec1->out_pos + size1 ) > ( sec2->out_pos + size2 ) )
 		return 1;
-	if ( ( sec1->out_pos + sec1->org ) < ( sec2->out_pos + sec2->org ) )
+	if ( ( sec1->out_pos + size1 ) < ( sec2->out_pos + size2 ) )
 		return -1;
-	
+
+	debug_section_overlap( sec1, sec2 );
+
 	output_error(0);
 	return 0;
 }
@@ -71,15 +124,15 @@ static void write_output(FILE *f,section *sec,symbol *sym)
     if (sym->type == IMPORT)
       output_error(6,sym->name);  /* undefined symbol */
   }
-  
+
   /* count valid sections */
   for (s=sec,nsecs=0; s!=NULL; s=s->next) {
 	if (use_section(s)) {
 	  nsecs++;
 	}
   }
-  
-  /* make an array of section pointers, sorted by their start address */
+
+  /* make an array of section pointers, sorted by their output address */
   seclist = (section **)mymalloc(nsecs * sizeof(section *));
   for (s=sec,slp=seclist; s!=NULL; s=s->next) {
 	if (use_section(s)) {
@@ -87,20 +140,21 @@ static void write_output(FILE *f,section *sec,symbol *sym)
 	}
   }
   if (nsecs > 1)
-    qsort(seclist,nsecs,sizeof(section *),orgcmp);
+    qsort(seclist,nsecs,sizeof(section *),out_pos_cmp);
 
-  /* we don't support overlapping sections */
+  /* check for overlapping sections */
   for (i=0; i<nsecs; ++i) {
     s = seclist[i];
 	st1 = s->out_pos;
-	ed1 = st1 + ( s->pc - s->org );
+	ed1 = st1 + ((utaddr)(s->pc) - (utaddr)(s->org));
     for (j=i+1; j<nsecs; ++j) {
       s2 = seclist[j];
       st2 = s2->out_pos;
-	  ed2 = st2 + ( s2->pc - s2->org );
+	  ed2 = st2 + ((utaddr)(s2->pc) - (utaddr)(s2->org));
 	  if ( ( ( st2 >= st1 ) && ( st2 < ed1 ) ) ||
            ( ( st1 >= st2 ) && ( st1 < ed2 ) ) )
 	  {
+		debug_section_overlap( s, s2 );
 	    output_error(0);
 	  }
     }
@@ -119,18 +173,18 @@ static void write_output(FILE *f,section *sec,symbol *sym)
 	if ( g_print_map )
 	{
 		wpc = 0;
-		
+
 		printf("\n ==== output section map ============\n\n");
 		for ( i = 0; i < nsecs; ++i )
 		{
 			s = seclist[i];
 			size = (utaddr)(s->pc) - (utaddr)(s->org);
-			
+
 			if ( wpc < s->out_pos ) {
-				printf(" %08llX - %08llX %16s\n", 
+				printf(" %08llX - %08llX %16s\n",
 					wpc,s->out_pos-1,"---");
 			}
-			
+
 			if ( size == 1 ) {
 				printf(" %08llX            %16s",
 					s->out_pos,
@@ -159,9 +213,9 @@ static void write_output(FILE *f,section *sec,symbol *sym)
 
 			wpc = s->out_pos + ULLTADDR(size);
 		}
-		
+
 		if ( wpc < g_length && g_length > 0 ) {
-			printf(" %08llX - %08llX %16s\n", 
+			printf(" %08llX - %08llX %16s\n",
 				wpc,g_length-1,"---");
 			wpc = g_length;
 		}
@@ -196,7 +250,7 @@ static void write_output(FILE *f,section *sec,symbol *sym)
     }
   }
   free(seclist);
-  
+
   /* pad to given length? */
   for (; wpc<g_length; ++wpc) {
 	  fw8(f,0);
