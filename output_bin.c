@@ -135,7 +135,7 @@ static void write_output(FILE *f,section *sec,symbol *sym)
 				printf(" %08llX            %16s",
 					s->out_pos,
 					s->name);
-			} else {
+			} else if ( ULLTADDR(size) > 0 ) {
 				printf(" %08llX - %08llX %16s (%llu)",
 					s->out_pos,s->out_pos + size-1,
 					s->name,ULLTADDR(size));
@@ -153,9 +153,10 @@ static void write_output(FILE *f,section *sec,symbol *sym)
 					);
 				}
 			}
-			
-			putchar('\n');
-			
+
+			if ( ULLTADDR(size) > 0 )
+				putchar('\n');
+
 			wpc = s->out_pos + ULLTADDR(size);
 		}
 		
@@ -163,9 +164,9 @@ static void write_output(FILE *f,section *sec,symbol *sym)
 			printf(" %08llX - %08llX %16s\n", 
 				wpc,g_length-1,"---");
 			wpc = g_length;
-		}			
-		
-		printf( "\n  length: %12llu bytes.", wpc );
+		}
+
+		printf( "\n  total: %12llu bytes.", wpc );
 		printf("\n ====================================\n\n");
 	}
 

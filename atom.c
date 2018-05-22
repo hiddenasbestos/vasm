@@ -158,7 +158,7 @@ static size_t space_size(sblock *sb,section *sec,taddr pc)
 
   if (eval_expr(sb->space_exp,&space,sec,pc) || !final_pass) {
     sb->space = space;
-    if ((utaddr)(pc+space) < (utaddr)pc)
+    if (((utaddr)pc+(utaddr)space) < (utaddr)pc)
       general_error(45);  /* illegal negative value */
   }
   else
@@ -191,7 +191,7 @@ static size_t space_size(sblock *sb,section *sec,taddr pc)
 }
 
 
-static size_t roffs_size(expr *offsexp,section *sec,taddr pc)
+static size_t offs_size(expr *offsexp,section *sec,taddr pc)
 {
   taddr offs;
 
@@ -272,7 +272,9 @@ size_t atom_size(atom *p,section *sec,taddr pc)
     case DATADEF:
       return (p->content.defb->bitsize+7)/8;
     case ROFFS:
-      return roffs_size(p->content.roffs,sec,pc);
+      return offs_size(p->content.roffs,sec,pc);
+    case AOFFS:
+      return offs_size(p->content.aoffs,sec,pc);
     default:
       ierror(0);
       break;
@@ -343,6 +345,10 @@ void print_atom(FILE *f,atom *p)
     case ROFFS:
       fprintf(f,"roffs: offset ");
       print_expr(f,p->content.roffs);
+      break;
+    case AOFFS:
+      fprintf(f,"aoffs: offset ");
+      print_expr(f,p->content.aoffs);
       break;
     case RORG:
       fprintf(f,"rorg: relocate to 0x%llx",ULLTADDR(*p->content.rorg));
@@ -554,6 +560,15 @@ atom *new_roffs_atom(expr *offs)
   atom *new = new_atom(ROFFS,1);
 
   new->content.roffs = offs;
+  return new;
+}
+
+
+atom *new_aoffs_atom(expr *offs)
+{
+  atom *new = new_atom(AOFFS,1);
+
+  new->content.aoffs = offs;
   return new;
 }
 

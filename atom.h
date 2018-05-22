@@ -19,6 +19,7 @@
 #define RORGEND 12
 #define ASSERT 13
 #define NLIST 14
+#define AOFFS 15
 
 /* a machine instruction */
 typedef struct instruction {
@@ -101,6 +102,7 @@ typedef struct atom {
     char *ptext;
     printexpr *pexpr;
     expr *roffs;
+    expr *aoffs;
     taddr *rorg;
     assertion *assert;
     aoutnlist *nlist;
@@ -129,6 +131,7 @@ atom *new_opts_atom(void *);
 atom *new_text_atom(char *);
 atom *new_expr_atom(expr *,int,int);
 atom *new_roffs_atom(expr *);
+atom *new_aoffs_atom(expr *);
 atom *new_rorg_atom(taddr);
 atom *new_rorgend_atom(void);
 atom *new_assert_atom(expr *,char *,char *);

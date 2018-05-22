@@ -363,11 +363,27 @@ static void assemble(void)
       }
       else if(p->type==ROFFS){
         sblock *sb;
-        taddr space;
+        utaddr space; /* DSW: change taddr -> utaddr */
         if(eval_expr(p->content.roffs,&space,sec,sec->pc)){
           space=sec->org+space-sec->pc;
           if (space>=0){
             sb=new_sblock(number_expr(space),1,0);
+            p->content.sb=sb;
+            p->type=SPACE;
+          }
+          else
+            general_error(20);  /* rorg is lower than current pc */
+        }
+        else
+          general_error(30);  /* expression must be constant */
+      }
+      else if(p->type==AOFFS){
+        sblock *sb;
+        utaddr target;
+        if(eval_expr(p->content.roffs,&target,sec,sec->pc)){
+         if (target>=(utaddr)sec->pc){
+			target-=(utaddr)sec->pc;
+            sb=new_sblock(number_expr(target),1,0);
             p->content.sb=sb;
             p->type=SPACE;
           }

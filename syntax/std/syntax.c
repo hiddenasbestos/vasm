@@ -253,8 +253,8 @@ static void handle_org(char *s)
 		  current_section->out_pos = ULLTADDR(current_section->org);
 	  }
     } else {
-      /* .org inside a section is treated as an offset */
-      add_atom(0,new_roffs_atom(parse_expr_tmplab(&s)));
+      /* .org inside a section is treated as a space */
+      add_atom(0,new_aoffs_atom(parse_expr_tmplab(&s))); /*AOFFS is an absolute offset*/
     }
   }
   else
