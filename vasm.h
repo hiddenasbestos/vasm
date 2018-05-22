@@ -128,6 +128,9 @@ struct section {
   taddr org;
   uint64_t out_pos; /* output position (absolute), used to relocate sections into banks */
   taddr pc;
+  int org_is_prev; /* org/pc are set using the previous section */
+  uint64_t out_pos_prev;
+  int out_pos_set; /* out_pos was set using the .output command */
   unsigned long idx; /* usable by output module */
 };
 

@@ -223,9 +223,11 @@ static void handle_output(char *s)
       syntax_error(18);  /* syntax error */
       return;
 	}
-	
+
   if (current_section != NULL) {
-    current_section->out_pos = var;
+    current_section->out_pos = current_section->out_pos_prev = var;
+    current_section->org_is_prev = 0; /*not true any more*/
+    current_section->out_pos_set = 1; /*true now*/
   } else {
     set_section(new_org(var));
   }
@@ -246,13 +248,15 @@ static void handle_org(char *s)
   }
   else if (current_section != NULL)
   {
-    if ( current_section->pc == 0 ) {
+    if ( current_section->pc == 0 || current_section->org_is_prev ) {
       /* .org at the very start of a section, moves the section */
       current_section->org = current_section->pc = parse_constexpr(&s);
-	  if ( current_section->out_pos == 0 ) {
+	  if ( current_section->out_pos_set == 0 || current_section->org_is_prev ) {
 		  current_section->out_pos = ULLTADDR(current_section->org);
 	  }
-    } else {
+	  current_section->org_is_prev = 0; /*not true any more*/
+	  current_section->out_pos_set = 1; /*true now*/
+   } else {
       /* .org inside a section is treated as a space */
       add_atom(0,new_aoffs_atom(parse_expr_tmplab(&s))); /*AOFFS is an absolute offset*/
     }
@@ -620,12 +624,12 @@ static void handle_comm(char *s)
   else
     sym->align=DATA_ALIGN((int)sym->size->c.val*bitsperbyte);
   eol(s);
-} 
+}
 
 static void handle_lcomm(char *s)
 {
   new_bss(s,0);
-} 
+}
 
 static expr *read_stabexp(char **s)
 {
@@ -1221,7 +1225,7 @@ void parse(void)
       }else{
         s=skip(s+1);
       }
-    }      
+    }
     s=skip(s);
     if(!ISEOL(s)) syntax_error(6);
     ip=new_inst(start,inst_len,op_cnt,op,op_len);
@@ -1357,7 +1361,7 @@ int expand_macro(source *src,char **line,char *d,int dlen)
     }
     if (nc >= 0)
       *line = s;  /* update line pointer when expansion took place */
-  }           
+  }
   return nc;  /* number of chars written to line buffer, -1: out of space */
 }
 
@@ -1441,7 +1445,7 @@ int init_syntax()
   cond_init();
 #if defined(VASM_CPU_X86)
   current_pc_char = '.';
-#endif  
+#endif
   esc_sequences = !noesc;
   nocase_macros = 1;
   return 1;

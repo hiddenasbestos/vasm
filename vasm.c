@@ -63,7 +63,7 @@ struct deplist {
 };
 static struct deplist *first_depend,*last_depend;
 
-static section *first_section,*last_section;
+static section *first_section,*last_section,*prev_section;
 #if NOT_NEEDED
 static section *prev_sec=NULL,*prev_org=NULL;
 #endif
@@ -87,7 +87,7 @@ void leave(void)
 {
   section *sec;
   symbol *sym;
-  
+
   if(outfile){
     fclose(outfile);
     if (errors)
@@ -500,13 +500,13 @@ static int init_output(char *fmt)
   if(!strcmp(fmt,"test"))
     return init_output_test(&output_copyright,&write_object,&output_args);
   if(!strcmp(fmt,"elf"))
-    return init_output_elf(&output_copyright,&write_object,&output_args);  
+    return init_output_elf(&output_copyright,&write_object,&output_args);
   if(!strcmp(fmt,"bin"))
     return init_output_bin(&output_copyright,&write_object,&output_args);
   if(!strcmp(fmt,"srec"))
     return init_output_srec(&output_copyright,&write_object,&output_args);
   if(!strcmp(fmt,"vobj"))
-    return init_output_vobj(&output_copyright,&write_object,&output_args);  
+    return init_output_vobj(&output_copyright,&write_object,&output_args);
   if(!strcmp(fmt,"hunk"))
     return init_output_hunk(&output_copyright,&write_object,&output_args);
   if(!strcmp(fmt,"aout"))
@@ -1048,15 +1048,40 @@ section *new_section(char *name,char *attr,int align)
   if(unnamed_sections)
     name=emptystr;
   if(p=find_section(name,attr))
+  {
+	prev_section=p;
     return p;
+  }
   p=mymalloc(sizeof(*p));
   p->next=0;
   p->name=mystrdup(name);
   p->attr=mystrdup(attr);
   p->first=p->last=0;
   p->align=align;
-  p->org=p->pc=0;
-  p->out_pos=0;
+  if (prev_section)
+  {
+    p->org=p->pc=prev_section->pc;
+    if (prev_section->org_is_prev)
+    {
+	  p->out_pos_prev=prev_section->out_pos_prev;
+      p->out_pos=prev_section->out_pos_prev+((utaddr)prev_section->pc);
+    }
+    else
+    {
+	  p->out_pos_prev=prev_section->out_pos;
+      p->out_pos=prev_section->out_pos+((utaddr)prev_section->pc-(utaddr)prev_section->org);
+    }
+    p->org_is_prev=1;
+    /*printf( "section %s: prev_section->org_is_prev = %d, default p->pc = %x, p->out_pos = %x\n", name, prev_section->org_is_prev, p->pc, p->out_pos );*/
+  }
+  else
+  {
+    p->org=p->pc=0;
+    p->out_pos=0;
+    p->org_is_prev=0;
+    p->out_pos_prev=0;
+  }
+  p->out_pos_set=0;
   p->flags=0;
   p->memattr=0;
   memset(p->pad,0,MAXPADBYTES);
@@ -1065,6 +1090,7 @@ section *new_section(char *name,char *attr,int align)
     last_section=last_section->next=p;
   else
     first_section=last_section=p;
+  prev_section=p;
   return p;
 }
 
@@ -1296,7 +1322,7 @@ static void print_list_header(FILE *f,int cnt)
       cnt++;
     }
     fprintf(f,"Err  Line Loc.  S Object1  Object2  M Source\n");
-  }  
+  }
 }
 
 #if VASM_CPU_OIL
@@ -1361,7 +1387,7 @@ void write_listing(char *listname)
       fprintf(f,"%c ",rel);
     }else
       fprintf(f,"                           ");
-    
+
     fprintf(f," %-.77s",p->txt);
 
     /* bei laengeren Daten den Rest ueberspringen */
@@ -1414,7 +1440,7 @@ void write_listing(char *listname)
           else
             rel='0'+p->sec->idx;
         }else
-          rel='A';      
+          rel='A';
       }else
         a=0;
     }
