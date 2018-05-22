@@ -195,7 +195,7 @@ static void write_output(FILE *f,section *sec,symbol *sym)
 					s->name,ULLTADDR(size));
 			}
 
-			if ( s->out_pos != s->org )
+			if ( ULLTADDR(s->out_pos) != ULLTADDR(s->org) )
 			{
 				if ( size == 1 )
 				{
