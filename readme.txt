@@ -14,3 +14,6 @@ $ make CPU=z80 SYNTAX=std -e CC=gcc
 vasm (ppc):
 $ make CPU=ppc SYNTAX=oldstyle -e CC=gcc
 
+vasm (x86):
+$ make CPU=x86 SYNTAX=std -e CC=gcc
+
