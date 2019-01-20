@@ -1346,6 +1346,7 @@ int expand_macro(source *src,char **line,char *d,int dlen)
       nc = sprintf(d,"%lu",src->id);
       if (nc >= dlen)
         nc = -1;
+      ++s;
     }
     else if (*s=='(' && *(s+1)==')') {
       /* \() is just skipped, useful to terminate named macro parameters */
