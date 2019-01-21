@@ -507,6 +507,8 @@ static int init_output(char *fmt)
     return init_output_srec(&output_copyright,&write_object,&output_args);
   if(!strcmp(fmt,"vobj"))
     return init_output_vobj(&output_copyright,&write_object,&output_args);
+  if(!strcmp(fmt,"mekasym"))
+    return init_output_mekasym(&output_copyright,&write_object,&output_args);
   if(!strcmp(fmt,"hunk"))
     return init_output_hunk(&output_copyright,&write_object,&output_args);
   if(!strcmp(fmt,"aout"))

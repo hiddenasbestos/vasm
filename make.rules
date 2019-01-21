@@ -4,8 +4,8 @@ OBJS = $(PRE)vasm.o $(PRE)atom.o $(PRE)expr.o $(PRE)symtab.o $(PRE)symbol.o \
        $(PRE)error.o $(PRE)parse.o $(PRE)reloc.o $(PRE)hugeint.o \
        $(PRE)cond.o $(PRE)supp.o $(PRE)cpu.o $(PRE)syntax.o \
        $(PRE)output_test.o $(PRE)output_elf.o $(PRE)output_bin.o \
-       $(PRE)output_vobj.o $(PRE)output_hunk.o $(PRE)output_aout.o \
-       $(PRE)output_tos.o $(PRE)output_srec.o
+       $(PRE)output_vobj.o $(PRE)output_mekasym.o $(PRE)output_hunk.o \
+       $(PRE)output_aout.o $(PRE)output_tos.o $(PRE)output_srec.o
 
 VODOBJS = obj$(TARGET)/vobjdump.o
 
@@ -80,6 +80,9 @@ $(PRE)output_srec.o: output_srec.c vasm.h symbol.h error.h supp.h atom.h
 
 $(PRE)output_vobj.o: output_vobj.c vasm.h symbol.h error.h supp.h atom.h
 	$(CC) $(INCLUDES) $(COPTS) output_vobj.c $(CCOUT)$(PRE)output_vobj.o
+
+$(PRE)output_mekasym.o: output_mekasym.c vasm.h symbol.h error.h supp.h atom.h
+	$(CC) $(INCLUDES) $(COPTS) output_mekasym.c $(CCOUT)$(PRE)output_mekasym.o
 
 $(PRE)output_hunk.o: output_hunk.c output_hunk.h vasm.h symbol.h error.h supp.h atom.h
 	$(CC) $(INCLUDES) $(COPTS) output_hunk.c $(CCOUT)$(PRE)output_hunk.o
