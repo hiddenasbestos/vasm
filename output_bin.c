@@ -180,9 +180,13 @@ static void write_output(FILE *f,section *sec,symbol *sym)
 			s = seclist[i];
 			size = (utaddr)(s->pc) - (utaddr)(s->org);
 
-			if ( wpc < s->out_pos ) {
-				printf(" %08llX - %08llX %16s\n",
-					wpc,s->out_pos-1,"---");
+			if ( wpc < s->out_pos )
+			{
+  				utaddr gap_size;
+  				gap_size = (s->out_pos-1) - wpc;
+				
+				printf(" %08llX - %08llX %16s (%llu)\n",
+					wpc,s->out_pos-1,"---",gap_size);
 			}
 
 			if ( size == 1 ) {
