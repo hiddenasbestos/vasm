@@ -10,6 +10,8 @@ static char *copyright="vasm binary output module 1.8a (c) 2002-2009,2013,2015,2
 #define BINFMT_CBMPRG   1   /* Commodore VIC-20/C-64 PRG format */
 static int binfmt = BINFMT_RAW;
 
+static uint8_t g_gap_value = 0xFF;
+
 static int g_rom_mode = 0;
 static int g_print_map = 0;
 static uint64_t g_length = 0;
@@ -185,8 +187,8 @@ static void write_output(FILE *f,section *sec,symbol *sym)
   				utaddr gap_size;
   				gap_size = (s->out_pos-1) - wpc;
 				
-				printf(" %08llX - %08llX %16s (%llu)\n",
-					wpc,s->out_pos-1,"---",gap_size);
+				printf(" %08llX - %08llX %16s (%llu)\t\t<-- fill: 0x%02X\n",
+					wpc,s->out_pos-1,"---",gap_size,g_gap_value);
 			}
 
 			if ( size == 1 ) {
@@ -221,9 +223,14 @@ static void write_output(FILE *f,section *sec,symbol *sym)
 			wpc = s->out_pos + ULLTADDR(size);
 		}
 
-		if ( wpc < g_length && g_length > 0 ) {
-			printf(" %08llX - %08llX %16s\n",
-				wpc,g_length-1,"---");
+		if ( wpc < g_length && g_length > 0 )
+		{
+			utaddr gap_size;
+			gap_size = (g_length-1) - wpc;
+
+			printf(" %08llX - %08llX %16s (%llu)\t\t<-- fill: 0x%02X\n",
+				wpc,g_length-1,"---",gap_size,g_gap_value);
+
 			wpc = g_length;
 		}
 
@@ -236,9 +243,9 @@ static void write_output(FILE *f,section *sec,symbol *sym)
   for (slp=seclist; nsecs>0; nsecs--) {
     s = *slp++;
     if (s->out_pos > wpc) {
-      /* fill gap between sections with zeros */
+      /* fill gap between sections */
       for (; wpc < s->out_pos; ++wpc)
-        fw8(f,0);
+        fw8(f,g_gap_value);
     }
 
     for (p=s->first; p; p=p->next) {
@@ -260,7 +267,7 @@ static void write_output(FILE *f,section *sec,symbol *sym)
 
   /* pad to given length? */
   for (; wpc<g_length; ++wpc) {
-	  fw8(f,0);
+	  fw8(f,g_gap_value);
   }
 }
 
@@ -277,6 +284,10 @@ static int output_args(char *p)
   }
   else if (!strcmp(p,"-map")) {
     g_print_map = 1;
+    return 1;
+  }
+  else if (!strncmp(p,"-fill=",6)) {
+    g_gap_value = atol(p+6);
     return 1;
   }
   else if (!strncmp(p,"-len=",5)) {
