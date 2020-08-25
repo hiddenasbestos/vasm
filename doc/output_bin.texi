@@ -13,6 +13,10 @@ selected with the @option{-Fbin} option.
         Writes a Commodore PRG header in front of the output file, which
         consists of two bytes in little-endian order, defining the load
         address of the program.
+    @item -zx-tap=<name>
+        Writes a ZX Spectrum compatible TAP header in front of the output
+        file, which consists of a code header block and checksum. The block
+        is given the title <name> which can be up to 10 characters long.
     @item -rom
         Only output read-only sections. Writable sections are discarded.
     @item -map
