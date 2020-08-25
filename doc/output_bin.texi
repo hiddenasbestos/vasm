@@ -21,6 +21,9 @@ selected with the @option{-Fbin} option.
         Only output read-only sections. Writable sections are discarded.
     @item -map
         Write a detailed map of the output file to the standard output.
+    @item -fill=<xx>
+        Gaps between output sections are filled with 00h bytes by default.
+        To specify a different value such as FFh use -fill=255
     @item -len=<n>
         Ensure that the file output is at least <n> bytes long. Shorter
         files are padded to this length with zero byte values. Longer files
